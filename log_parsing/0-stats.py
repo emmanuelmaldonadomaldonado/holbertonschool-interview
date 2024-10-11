@@ -1,47 +1,47 @@
 #!/usr/bin/python3
-"""
-Module that parses a log and prints stats to stdout
-"""
-from sys import stdin
-
-status_codes = {
-    "200": 0,
-    "301": 0,
-    "400": 0,
-    "401": 0,
-    "403": 0,
-    "404": 0,
-    "405": 0,
-    "500": 0
-}
-
-size = 0
+import sys
 
 
-def print_stats():
-    """Prints the accumulated logs"""
-    print("File size: {}".format(size))
-    for status in sorted(status_codes.keys()):
-        if status_codes[status]:
-            print("{}: {}".format(status, status_codes[status]))
+def print_stats(file_size, status_counts):
+    """Print the file size and the status code counts."""
+    print(f"File size: {file_size}")
+    for code in sorted(status_counts):
+        if status_counts[code] > 0:
+            print(f"{code}: {status_counts[code]}")
 
 
-if __name__ == "__main__":
-    count = 0
-    try:
-        for line in stdin:
+file_size = 0
+status_counts = {200: 0, 301: 0, 400: 0,
+                 401: 0, 403: 0, 404: 0, 405: 0, 500: 0}
+line_count = 0
+
+try:
+    for line in sys.stdin:
+        line_count += 1
+        parts = line.split()
+
+        # Check if line is in the expected format
+        if len(parts) >= 7:
             try:
-                items = line.split()
-                size += int(items[-1])
-                if items[-2] in status_codes:
-                    status_codes[items[-2]] += 1
-            except:
+                # Extract file size and status code
+                file_size += int(parts[-1])
+                status_code = int(parts[-2])
+
+                # Update status code count if valid
+                if status_code in status_counts:
+                    status_counts[status_code] += 1
+            except ValueError:
+                # If conversion fails, ignore that line
                 pass
-            if count == 9:
-                print_stats()
-                count = -1
-            count += 1
-    except KeyboardInterrupt:
-        print_stats()
-        raise
-    print_stats()
+
+        # Every 10 lines, print the statistics
+        if line_count % 10 == 0:
+            print_stats(file_size, status_counts)
+
+except KeyboardInterrupt:
+    # On keyboard interrupt, print the current statistics
+    print_stats(file_size, status_counts)
+    raise
+
+# Print final stats after EOF (end of input)
+print_stats(file_size, status_counts)
