@@ -1,34 +1,30 @@
 #!/usr/bin/python3
-"""
-validUTF8
+"""UTF-8 validation
 """
 
 
 def validUTF8(data):
-    """Determines if a given data set represents a valid UTF-8 encoding"""
+    """ validate utf-8 in data comming """
+
     count = 0
 
-    for x in data:
-
-        if 191 >= x >= 128:
-
-            if not count:
-                return False
-
-            count -= 1
-        else:
-            if count:
-                return False
-
-            if x < 128:
-                continue
-            elif x < 224:
+    for bit in data:
+        binary = bin(bit).replace('0b', '').rjust(8, '0')[-8:]
+        if count == 0:
+            if binary.startswith('110'):
                 count = 1
-            elif x < 240:
+            if binary.startswith('1110'):
                 count = 2
-            elif x < 248:
+            if binary.startswith('11110'):
                 count = 3
-            else:
+            if binary.startswith('10'):
                 return False
+        else:
+            if not binary.startswith('10'):
+                return False
+            count -= 1
 
-    return count == 0
+    if count != 0:
+        return False
+
+    return True
