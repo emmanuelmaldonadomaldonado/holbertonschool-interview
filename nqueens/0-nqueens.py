@@ -1,72 +1,51 @@
 #!/usr/bin/python3
-"""
-Script that solves the N queens problem based on the general Backtracking
-algorithm.
-
-This is:
-procedure bt(c) is
-    if reject(P, c) then return
-    if accept(P, c) then output(P, c)
-    s  first(P, c)
-    while s  NULL do
-        bt(s)
-        s  next(P, s)
-"""
 import sys
 
 
-def valid_pos(solution, pos):
-    """
-    Function that verifies if the position is valid
-    """
-    for queen in solution:
-        if queen[1] == pos[1]:
-            return False
-        if (queen[0] + queen[1]) == (pos[0] + pos[1]):
-            return False
-        if (queen[0] - queen[1]) == (pos[0] - pos[1]):
+def is_safe(board, row, col, n):
+    """Check if placing a queen is safe at board[row][col]."""
+    for i in range(row):
+        if board[i] == col or \
+           board[i] - i == col - row or \
+           board[i] + i == col + row:
             return False
     return True
 
 
-def solve_queens(row, n, solution):
-    """
-    Function that finds the solution recursively, from the root down
-    """
-    if (row == n):
-        print(solution)
-    else:
-        for col in range(n):
-            pos = [row, col]
-            if valid_pos(solution, pos):
-                solution.append(pos)
-                solve_queens(row + 1, n, solution)
-                solution.remove(pos)
+def solve_nqueens(n, row=0, board=[], solutions=[]):
+    """Recursive backtracking function to solve N queens."""
+    if row == n:
+        solutions.append([[i, board[i]] for i in range(n)])
+        return
+
+    for col in range(n):
+        if is_safe(board, row, col, n):
+            board.append(col)
+            solve_nqueens(n, row + 1, board, solutions)
+            board.pop()
 
 
-def main(n):
-    """
-    Main function
-    """
-    solution = []
-    """ From root(0) down(n) """
-    solve_queens(0, n, solution)
-
-
-if __name__ == '__main__':
-    """ Validate the arguments from OS """
+def main():
+    """Main entry point: parses arguments and calls solver."""
     if len(sys.argv) != 2:
-        print('Usage: nqueens N')
-        sys.exit(1)
-    try:
-        i = int(sys.argv[1])
-    except BaseException:
-        print('N must be a number')
-        sys.exit(1)
-    i = int(sys.argv[1])
-    if i < 4:
-        print('N must be at least 4')
+        print("Usage: nqueens N")
         sys.exit(1)
 
-    """ Calling the main function """
-    main(i)
+    try:
+        n = int(sys.argv[1])
+    except ValueError:
+        print("N must be a number")
+        sys.exit(1)
+
+    if n < 4:
+        print("N must be at least 4")
+        sys.exit(1)
+
+    solutions = []
+    solve_nqueens(n, board=[], solutions=solutions)
+    for sol in solutions:
+        print(sol)
+
+
+if __name__ == "__main__":
+    main()
