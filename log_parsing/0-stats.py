@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 """
-Log parsing script
+This script reads stdin line by line and computes metrics:
+- Total file size
+- Count of status codes
+It prints stats every 10 lines or when interrupted by CTRL+C.
 """
 
 import sys
