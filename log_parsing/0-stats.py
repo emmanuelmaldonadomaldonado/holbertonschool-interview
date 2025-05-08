@@ -1,45 +1,44 @@
 #!/usr/bin/python3
 """
-Reads stdin line by line and computes metrics
+Log parsing script
 """
 
-from sys import stdin
+import sys
+import re
+from collections import defaultdict
 
-if __name__ == "__main__":
-    total_size = 0
-    status_codes = {}
-    list_status_codes = [
-        "200", "301", "400", "401", "403", "404", "405", "500"]
-    for status in list_status_codes:
-        status_codes[status] = 0
-    count = 0
-    try:
-        for line in stdin:
-            try:
-                args = line.split(" ")
-                if len(args) != 9:
-                    pass
-                if args[-2] in list_status_codes:
-                    status_codes[args[-2]] += 1
-                if args[-1][-1] == '\n':
-                    args[-1][:-1]
-                total_size += int(args[-1])
-            except:
-                pass
-            count += 1
-            if count % 10 == 0:
-                print("File size: {}".format(total_size))
-                for status in sorted(status_codes.keys()):
-                    if status_codes[status] != 0:
-                        print("{}: {}".format(
-                            status, status_codes[status]))
-        print("File size: {}".format(total_size))
-        for status in sorted(status_codes.keys()):
-            if status_codes[status] != 0:
-                print("{}: {}".format(status, status_codes[status]))
-    except KeyboardInterrupt as err:
-        print("File size: {}".format(total_size))
-        for status in sorted(status_codes.keys()):
-            if status_codes[status] != 0:
-                print("{}: {}".format(status, status_codes[status]))
-        raise
+# Track total file size and status code counts
+total_size = 0
+status_codes = defaultdict(int)
+valid_codes = ['200', '301', '400', '401', '403', '404', '405', '500']
+line_count = 0
+
+
+def print_stats():
+    """Prints the statistics"""
+    print("File size: {}".format(total_size))
+    for code in sorted(status_codes.keys()):
+        print("{}: {}".format(code, status_codes[code]))
+
+
+try:
+    for line in sys.stdin:
+        match = re.search(
+            r'(?P<ip>\S+) - \[.*?\] "GET /projects/260 HTTP/1.1" '
+            r'(?P<code>\d{3}) (?P<size>\d+)', line)
+        if match:
+            status = match.group('code')
+            size = int(match.group('size'))
+            total_size += size
+            if status in valid_codes:
+                status_codes[status] += 1
+            line_count += 1
+
+            if line_count % 10 == 0:
+                print_stats()
+
+except KeyboardInterrupt:
+    print_stats()
+    raise
+
+print_stats()
